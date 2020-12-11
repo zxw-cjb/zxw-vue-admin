@@ -14,7 +14,7 @@ export default {
   },
 
   /*
-  新增品牌
+  新增品牌，添加图片和名称到服务器中
   */
   addTrademark(data) {
     return request({
