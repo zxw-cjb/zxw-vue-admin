@@ -35,6 +35,7 @@ import '@/permission' // permission control
 import { hasBtnPermission } from './utils/permission'
 
 // 引入包含所有接口请求函数模块的API对象
+//把所有的请求命名为API，引入进来
 import * as API from '@/api'
 
 // 引入准备全局注册的组件
@@ -47,6 +48,7 @@ Vue.component('CategorySelector', CategorySelector)
 
 // 挂载到Vue原型对象上, 以便组件中直接可见
 Vue.prototype.$hasBP = hasBtnPermission
+//所有的api请求可以在$API上找到，在vue中不用引用
 Vue.prototype.$API = API
 Vue.prototype.$BASE_API = process.env.VUE_APP_BASE_API
 
