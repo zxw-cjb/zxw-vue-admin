@@ -1,21 +1,7 @@
 <template>
   <div>
     <el-button type="primary" @click="add" icon="el-icon-plus">添加</el-button>
-    <!--
-      :count="count"
-      v-bind:count="count" 单向数据流 / 强制绑定数据
-        子组件只能读取不能修改
-        问题：子组件需要修改数据
-        解决：数据源在哪，更新数据的方法就定义在哪
-
-      :count.sync="count" 给子组件传递xxx数据以及更新数据的方法update:xxx
-        相当于：
-          :count="count" @update:count="xxx"
-
-        .sync用于父子通信（子向父）
-     -->
-    <!-- <Test :count="count" :updateCount="updateCount" /> -->
-    <!-- <Test :count.sync="count" /> -->
+    <!-- 添加loading加载器 v-loading="loading" -->
 
     <el-table
       :data="trademarkList"
@@ -238,15 +224,6 @@ export default {
       };
     },
     update(row) {
-      /*
-        const a = [{x: 1}];
-        const b = a[0];
-        b.x = 2;
-
-        trademarkList: [row]
-        trademarkForm = row
-        trademarkForm.x = 2
-      */
       // 清空表单的校验
       this.$refs.trademarkForm && this.$refs.trademarkForm.clearValidate();
 
@@ -257,9 +234,6 @@ export default {
       this.trademarkForm = { ...row };
       // this.trademarkForm = JSON.parse(JSON.stringify(row));
     },
-    // updateCount() {
-    //   this.count++;
-    // },
     // 提交表单
     submitForm(form) {
       // 校验表单
@@ -337,6 +311,7 @@ export default {
     // },
     // 请求分页列表数据
     async getPageList(page, limit) {
+      //添加一个loading加载器
       this.loading = true;
       const result = await this.$API.trademark.getPageList(page, limit);
       if (result.code === 200) {
@@ -348,6 +323,7 @@ export default {
       } else {
         this.$message.error("获取品牌分页列表失败");
       }
+      //添加一个loading加载器
       this.loading = false;
     },
   },
