@@ -6,6 +6,7 @@
           v-model="category.category1Id"
           placeholder="请选择"
           @change="handleSelectChange1"
+          :disabled="disabled"
         >
           <el-option
             v-for="c1 in category1List"
@@ -22,6 +23,7 @@
           v-model="category.category2Id"
           placeholder="请选择"
           @change="handleSelectChange2"
+          :disabled="disabled"
         >
           <el-option
             v-for="c2 in category2List"
@@ -38,6 +40,7 @@
           v-model="category.category3Id"
           placeholder="请选择"
           @change="handleSelectChange3"
+          :disabled="disabled"
         >
           <el-option
             v-for="c3 in category3List"
@@ -54,6 +57,7 @@
 <script>
 export default {
   name: "Category",
+  props: ["disabled"],
   data() {
     return {
       category: {
@@ -69,6 +73,12 @@ export default {
   methods: {
     //处理输入框的change事件
     async handleSelectChange1(category1Id) {
+      //处理bug，三种分类选择完后，点击一级列表，出现的问题
+      this.category2List = [];
+      this.category3List = [];
+      this.category.category2Id = "";
+      this.category.category3Id = "";
+
       const result = await this.$API.attrs.getCategorys2(category1Id);
       if (result.code === 200) {
         this.category2List = result.data;
@@ -78,6 +88,10 @@ export default {
     },
 
     async handleSelectChange2(category2Id) {
+      //bug
+      this.category3List = [];
+      this.category.category3Id = "";
+
       const result = await this.$API.attrs.getCategorys3(category2Id);
       if (result.code === 200) {
         this.category3List = result.data;
@@ -87,15 +101,12 @@ export default {
     },
 
     async handleSelectChange3(category3Id) {
-      const Category = { ...this.category, category3Id };
-      const result = await this.$API.attrs.getAttrList(Category);
-      if (result.code === 200) {
-        // console.log(result.data);
-        // 子组件给父组件传递参数 自定义事件
-        this.$emit("change", result.data);
-      } else {
-        this.$message.error(result.message);
-      }
+      const category = {
+        ...this.category,
+        category3Id,
+      };
+
+      this.$emit("change", category);
     },
   },
   async mounted() {
