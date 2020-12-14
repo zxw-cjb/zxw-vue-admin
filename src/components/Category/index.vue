@@ -13,8 +13,7 @@
             :key="c1.id"
             :label="c1.name"
             :value="c1.id"
-          ></el-option>
-          <el-option label="区域二" value="beijing"></el-option>
+          ></el-option> 
         </el-select>
       </el-form-item>
 
@@ -31,7 +30,6 @@
             :label="c2.name"
             :value="c2.id"
           ></el-option>
-          <el-option label="区域二" value="beijing"></el-option>
         </el-select>
       </el-form-item>
 
