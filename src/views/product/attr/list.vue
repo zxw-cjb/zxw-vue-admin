@@ -1,9 +1,23 @@
 <template>
   <div>
-    <Category @change="getAttrList" :disabled="!isShowList" />
+    <!-- 自定义事件 -->
+    <!-- <Category
+      @change="getAttrList"
+      @clearList="clearList"
+      :disabled="!isShowList"
+    /> -->
 
-    <el-card style="margin-top: 20px" v-show="isShowList">
-      <el-button type="primary" icon="el-icon-plus">添加属性</el-button>
+    <!-- 全局事件总线 -->
+    <Category :disabled="!isShowList" />
+
+    <el-card v-show="isShowList" style="margin-top: 20px">
+      <el-button
+        type="primary"
+        icon="el-icon-plus"
+        :disabled="!category.category3Id"
+        @click="add"
+        >添加属性</el-button
+      >
 
       <el-table :data="attrList" border style="width: 100%; margin: 20px 0">
         <el-table-column type="index" label="序号" width="80" align="center">
@@ -21,7 +35,7 @@
             >
           </template>
         </el-table-column>
-        
+
         <el-table-column label="操作" width="150">
           <template v-slot="{ row }">
             <el-button
@@ -40,15 +54,19 @@
       </el-table>
     </el-card>
 
-    <!-- 添加属性界面 -->
-    <el-card style="margin-top: 20px" v-show="!isShowList">
+    <!-- 添加和修改属性界面 -->
+    <el-card v-show="!isShowList" style="margin-top: 20px">
       <el-form :model="attr" inline>
         <el-form-item label="属性名" prop="attrName"
           ><el-input v-model="attr.attrName"></el-input
         ></el-form-item>
       </el-form>
 
-      <el-button type="primary" icon="el-icon-plus" @click="addAttrValue"
+      <el-button
+        type="primary"
+        :disabled="!attr.attrName"
+        icon="el-icon-plus"
+        @click="addAttrValue"
         >添加属性值</el-button
       >
 
@@ -102,7 +120,7 @@
 </template>
 
 <script>
-import Category from "./category";
+import Category from "../../../components/Category";
 export default {
   name: "AttrList",
   data() {
@@ -113,9 +131,27 @@ export default {
         attrName: "",
         attrValueList: [],
       },
+      category: {
+        // 代表三个分类id数据
+        category1Id: "",
+        category2Id: "",
+        category3Id: "",
+      },
     };
   },
   methods: {
+    clearList() {
+      //清空数据
+      this.attrList = [];
+      //禁用按钮
+      this.category.category3Id = "";
+    },
+    //显示添加属性列表
+    add() {
+      this.isShowList = false;
+      this.attr.attrName = "";
+      this.attr.attrValueList = [];
+    },
     editCompleted(row, index) {
       if (!row.valueName) {
         this.attr.attrValueList.splice(index, 1);
@@ -125,7 +161,15 @@ export default {
     },
     //保存数据
     async save() {
-      const result = await this.$API.attrs.saveAttrInfo(this.attr);
+      const isAdd = !this.attr.id;
+      const data = this.attr;
+
+      if (isAdd) {
+        data.categoryId = this.category.category3Id;
+        data.categoryLevel = 3;
+      }
+
+      const result = await this.$API.attrs.saveAttrInfo(data);
       if (result.code === 200) {
         this.$message.success("更新属性成功~");
         this.isShowList = true;
@@ -136,7 +180,7 @@ export default {
     },
     //删除属性值
     delAttrValue(index) {
-      console.log(index);
+      // console.log(index);
       this.attr.attrValueList.splice(index, 1);
     },
     //添加属性值
@@ -177,6 +221,14 @@ export default {
         this.$message.error(result.message);
       }
     },
+  },
+  mounted() {
+    this.$bus.$on("change", this.getAttrList);
+    this.$bus.$on("clearList", this.clearList);
+  },
+  beforeDestroy() {
+    this.$bus.$off("change", this.getAttrList);
+    this.$bus.$off("clearList", this.clearList);
   },
   components: {
     Category,

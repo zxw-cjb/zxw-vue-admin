@@ -32,7 +32,9 @@ import '@/icons'
 import '@/permission' // permission control
 
 // 引入按钮级别权限控制的工具函数
-import { hasBtnPermission } from './utils/permission'
+import {
+  hasBtnPermission
+} from './utils/permission'
 
 // 引入包含所有接口请求函数模块的API对象
 //把所有的请求命名为API，引入进来
@@ -72,6 +74,9 @@ Vue.prototype.$BASE_API = process.env.VUE_APP_BASE_API
 Vue.config.productionTip = false
 
 new Vue({
+  beforeCreate() {
+    Vue.prototype.$bus = this
+  },
   el: '#app',
   router,
   store,
