@@ -58,7 +58,7 @@ export default {
     return request({
       url: `${api_name}/updateSpuInfo`,
       method: 'POST',
-      dat: spu
+      data: spu
     })
   },
 
