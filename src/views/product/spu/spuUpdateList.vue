@@ -127,7 +127,16 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="save">保存</el-button>
-        <el-button @click="$emit('showList', spu.category3Id)">取消</el-button>
+        <el-button
+          @click="
+            $emit('showList', {
+              category1Id: spu.category1Id,
+              category2Id: spu.category2Id,
+              category3Id: spu.category3Id,
+            })
+          "
+          >取消</el-button
+        >
       </el-form-item>
     </el-form>
 
@@ -223,15 +232,22 @@ export default {
             spuSaleAttrList: this.spuSaleAttrList,
           };
 
+          let result;
+
           // 发送请求
-          const result = await this.$API.spu.updateSpu(spu);
+          if (this.spu.id) {
+            result = await this.$API.spu.updateSpu(spu);
+          } else {
+            result = await this.$API.spu.saveSpu(spu);
+          }
+
           if (result.code === 200) {
             // 切换回showList
             this.$emit("showList", this.spu.category3Id);
             // this.$nextTick(() => {
             //   this.$bus.$emit("change", { category3Id: this.spu.category3Id });
             // });
-            this.$message.success("更新SPU成功~");
+            this.$message.success(`${this.spu.id ? "更新" : "添加"}SPU成功`);
           } else {
             this.$message.error(result.message);
           }
@@ -373,9 +389,13 @@ export default {
   },
   async mounted() {
     this.getTrademarkList();
-    this.getSpuImageList();
     this.getSaleAttrList();
-    this.getSpuSaleAttrList();
+    // 判断是添加还是修改
+    // 修改会有id，添加没有id
+    if (this.spu.id) {
+      this.getSpuSaleAttrList();
+      this.getSpuImageList();
+    }
   },
 };
 </script>

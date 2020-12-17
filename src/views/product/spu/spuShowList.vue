@@ -1,6 +1,12 @@
 <template>
   <el-card style="margin-top: 20px">
-    <el-button type="primary" icon="el-icon-plus">添加SPU</el-button>
+    <el-button
+      type="primary"
+      icon="el-icon-plus"
+      :disabled="!category.category3Id"
+      @click="$emit('showUpdateList', { category3Id: category.category3Id })"
+      >添加SPU</el-button
+    >
 
     <el-table
       :data="spuList"
@@ -11,16 +17,20 @@
       <el-table-column type="index" label="序号" width="80" align="center">
       </el-table-column>
       <el-table-column prop="spuName" label="SPU名称"> </el-table-column>
-
       <el-table-column prop="description" label="SPU描述"> </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="{ row }">
-          <el-button type="primary" icon="el-icon-plus" size="mini"></el-button>
+          <el-button
+            type="primary"
+            icon="el-icon-plus"
+            size="mini"
+            @click="$emit('showSpuList', { ...row, ...category })"
+          ></el-button>
           <el-button
             type="primary"
             icon="el-icon-edit"
             size="mini"
-            @click="$emit('showUpdateList', row)"
+            @click="$emit('showUpdateList', { ...row, ...category })"
           ></el-button>
           <el-button type="info" icon="el-icon-info" size="mini"></el-button>
           <el-button
@@ -63,6 +73,7 @@ export default {
     };
   },
   methods: {
+    // 获取SPU分页列表
     async getPageList(page, limit) {
       this.loading = true;
       const { category3Id } = this.category;
