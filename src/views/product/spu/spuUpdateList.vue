@@ -127,16 +127,7 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="save">保存</el-button>
-        <el-button
-          @click="
-            $emit('showList', {
-              category1Id: spu.category1Id,
-              category2Id: spu.category2Id,
-              category3Id: spu.category3Id,
-            })
-          "
-          >取消</el-button
-        >
+        <el-button @click="$emit('showList')">取消</el-button>
       </el-form-item>
     </el-form>
 
@@ -147,7 +138,9 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 import { category } from "@/api";
+
 export default {
   name: "SpuUpdateList",
   props: {
@@ -174,10 +167,16 @@ export default {
     };
   },
   computed: {
+    ...mapState({
+      category: (state) => state.category.category,
+    }),
     // 格式化图片数据
     formatImageList() {
       return this.imageList.map((img) => {
         return {
+          // 一上来请求回来的数据只有id
+          // 新添加的数据不能设置id（由后台设置），所以写的是uid
+          // 总之，id一定由后台服务器生成
           uid: img.uid || img.id,
           name: img.imgName,
           url: img.imgUrl,
@@ -186,9 +185,11 @@ export default {
     },
     filterSaleAttrList() {
       return this.saleAttrList.filter((sale) => {
+        // this.spuSaleAttrList.indexOf() // 只适用于数组中是基本类型
+        // 找到了返回{}  没有找到返回undefined
         return !this.spuSaleAttrList.find(
           (spuSale) => spuSale.baseSaleAttrId === sale.id
-        );
+        ); // 适用于数组中是引用类型
       });
     },
   },
@@ -224,16 +225,52 @@ export default {
     save() {
       this.$refs.spuForm.validate(async (valid) => {
         if (valid) {
-          // console.log("校验通过~");
+          console.log("校验通过~");
+          /*
+            {
+              "category3Id": 0,  // 三级分类id
+              "description": "string", // SPU描述
+              "id": 0, // SPU id
+              "spuImageList": [ // 图片列表
+                {
+                  "id": 0,
+                  "imgName": "string",
+                  "imgUrl": "string",
+                  "spuId": 0
+                }
+              ],
+              "spuName": "string", // SPU名称
+              "spuSaleAttrList": [ // SPU销售属性列表
+                {
+                  "baseSaleAttrId": 0,
+                  "id": 0,
+                  "saleAttrName": "string",
+                  "spuId": 0,
+                  "spuSaleAttrValueList": [
+                    {
+                      "baseSaleAttrId": 0,
+                      "id": 0,
+                      "isChecked": "string",
+                      "saleAttrName": "string",
+                      "saleAttrValueName": "string",
+                      "spuId": 0
+                    }
+                  ]
+                }
+              ],
+              "tmId": 0 // 品牌id
+            }
+
+          */
           // 收集数据
           const spu = {
             ...this.spu, // 展开数据
+            category3Id: this.category.category3Id,
             spuImageList: this.imageList,
             spuSaleAttrList: this.spuSaleAttrList,
           };
 
           let result;
-
           // 发送请求
           if (this.spu.id) {
             result = await this.$API.spu.updateSpu(spu);
@@ -243,11 +280,8 @@ export default {
 
           if (result.code === 200) {
             // 切换回showList
-            this.$emit("showList", this.spu.category3Id);
-            // this.$nextTick(() => {
-            //   this.$bus.$emit("change", { category3Id: this.spu.category3Id });
-            // });
-            this.$message.success(`${this.spu.id ? "更新" : "添加"}SPU成功`);
+            this.$emit("showList");
+            this.$message.success(`${this.spu.id ? "更新" : "添加"}SPU成功~`);
           } else {
             this.$message.error(result.message);
           }
@@ -285,6 +319,41 @@ export default {
 
       row.edit = false;
     },
+    // 添加销售属性
+    // addSpuSaleAttr() {
+    //   // 选中的销售属性id
+    //   const { saleAttrId, id } = this.spu;
+    //   // 去所有销售属性列表找到某个销售属性
+    //   const sale = this.saleAttrList.find((sale) => sale.id === saleAttrId);
+    //   /*
+    //     {
+    //         "baseSaleAttrId": 0, // 所有销售属性id
+    //         "id": 0, // 由后台生成
+    //         "saleAttrName": "string",  // 所有销售属性名称
+    //         "spuId": 0, // SPU id
+    //         "spuSaleAttrValueList": [
+    //           {
+    //             "baseSaleAttrId": 0,
+    //             "id": 0,
+    //             "isChecked": "string",
+    //             "saleAttrName": "string",
+    //             "saleAttrValueName": "string",
+    //             "spuId": 0
+    //           }
+    //         ]
+    //       }
+    //   */
+
+    //   // 将销售属性添加到商品中
+    //   this.spuSaleAttrList.push({
+    //     baseSaleAttrId: sale.id, // 所有销售属性id
+    //     saleAttrName: sale.name, // 所有销售属性名称
+    //     spuId: id, // SPU id
+    //     spuSaleAttrValueList: [], // 销售属性值列表
+    //   });
+    //   // 清空选中的销售属性id
+    //   this.spu.saleAttrId = "";
+    // },
 
     addSpuSaleAttr() {
       // 选中的销售属性

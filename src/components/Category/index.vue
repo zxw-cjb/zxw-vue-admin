@@ -13,7 +13,7 @@
             :key="c1.id"
             :label="c1.name"
             :value="c1.id"
-          ></el-option> 
+          ></el-option>
         </el-select>
       </el-form-item>
 
@@ -53,6 +53,8 @@
 </template>
 
 <script>
+import { mapState, mapActions, mapMutations } from "vuex";
+
 export default {
   name: "Category",
   props: ["disabled"],
@@ -63,12 +65,50 @@ export default {
         category2Id: "",
         category3Id: "",
       },
-      category1List: [],
-      category2List: [],
-      category3List: [],
+      // category1List: [],
+      // category2List: [],
+      // category3List: [],
     };
   },
+  computed: {
+    ...mapState({
+      category1List: (state) => state.category.category1List,
+      category2List: (state) => state.category.category2List,
+      category3List: (state) => state.category.category3List,
+    }),
+  },
   methods: {
+    ...mapMutations(["category/SET_CATEGORY3_ID"]),
+    ...mapActions([
+      "category/getCategory1List",
+      "category/getCategory2List",
+      "category/getCategory3List",
+    ]),
+
+    // 处理输入框的change事件
+    async handleSelectChange1(category1Id) {
+      this.category.category2Id = "";
+      this.category.category3Id = "";
+
+      this["category/getCategory2List"](category1Id);
+      // 清空父组件的数据
+      // this.$bus.$emit("clearList");
+    },
+    async handleSelectChange2(category2Id) {
+      this.category.category3Id = "";
+
+      this["category/getCategory3List"](category2Id);
+      // 清空父组件的数据
+      // this.$bus.$emit("clearList");
+    },
+    async handleSelectChange3(category3Id) {
+      this["category/SET_CATEGORY3_ID"](category3Id);
+    },
+  },
+  async mounted() {
+    this["category/getCategory1List"]();
+  },
+  /* methods: {
     //处理输入框的change事件
     async handleSelectChange1(category1Id) {
       //处理bug，三种分类选择完后，点击一级列表，出现的问题
@@ -110,15 +150,15 @@ export default {
 
       this.$bus.$emit("change", category);
     },
-  },
-  async mounted() {
+  }, */
+  /* async mounted() {
     const result = await this.$API.attrs.getCategorys1();
     if (result.code === 200) {
       this.category1List = result.data;
     } else {
       this.$message.error("result.message");
     }
-  },
+  }, */
 };
 </script>
 

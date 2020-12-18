@@ -7,7 +7,7 @@
       :disabled="!isShowList"
     /> -->
 
-    <!-- 全局事件总线 -->
+    <!-- 全局事件总线事件 -->
     <Category :disabled="!isShowList" />
 
     <el-card v-show="isShowList" style="margin-top: 20px">
@@ -35,7 +35,6 @@
             >
           </template>
         </el-table-column>
-
         <el-table-column label="操作" width="150">
           <template v-slot="{ row }">
             <el-button
@@ -54,12 +53,11 @@
       </el-table>
     </el-card>
 
-    <!-- 添加和修改属性界面 -->
     <el-card v-show="!isShowList" style="margin-top: 20px">
       <el-form :model="attr" inline>
-        <el-form-item label="属性名" prop="attrName"
-          ><el-input v-model="attr.attrName"></el-input
-        ></el-form-item>
+        <el-form-item label="属性名" prop="attrName">
+          <el-input v-model="attr.attrName"></el-input>
+        </el-form-item>
       </el-form>
 
       <el-button
@@ -79,6 +77,12 @@
         </el-table-column>
         <el-table-column label="属性值名称">
           <template v-slot="{ row, $index }">
+            <!--
+              事件修饰符：
+                .native
+                专门给组件绑定事件使用的
+                会给组件中的第一个标签绑定相应的原生DOM事件
+             -->
             <el-input
               v-if="row.edit"
               v-model="row.valueName"
@@ -88,6 +92,7 @@
               ref="input"
               size="mini"
             ></el-input>
+            <!-- 直接给对象添加新属性不是响应式数据, 通过this.$set添加的属性才是响应式 -->
             <span
               v-else
               @click="edit(row)"
@@ -96,7 +101,7 @@
             >
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150">
+        <el-table-column label="操作">
           <template v-slot="{ row, $index }">
             <!-- 文档有问题：onConfirm -->
             <el-popconfirm
@@ -120,7 +125,20 @@
 </template>
 
 <script>
-import Category from "../../../components/Category";
+import { mapState } from "vuex";
+import Category from "@/components/Category";
+
+/*
+categoryId:61
+categoryLevel:3
+id:3467
+attrName:"屏幕尺寸"
+attrValueList:Array[3]
+  attrId:3467
+  id:18904
+  valueName:"5.0~5.49英寸"
+*/
+
 export default {
   name: "AttrList",
   data() {
@@ -131,22 +149,39 @@ export default {
         attrName: "",
         attrValueList: [],
       },
-      category: {
-        // 代表三个分类id数据
-        category1Id: "",
-        category2Id: "",
-        category3Id: "",
-      },
+      // category: {
+      //   // 代表三个分类id数据
+      //   category1Id: "",
+      //   category2Id: "",
+      //   category3Id: "",
+      // },
     };
+  },
+  computed: {
+    ...mapState({
+      category: (state) => state.category.category,
+    }),
+  },
+  watch: {
+    "category.category3Id"(category3Id) {
+      if (!category3Id) return;
+      this.getAttrList();
+    },
+    "category.category1Id"() {
+      this.clearList();
+    },
+    "category.category2Id"() {
+      this.clearList();
+    },
   },
   methods: {
     clearList() {
-      //清空数据
+      // 清空数据
       this.attrList = [];
-      //禁用按钮
+      // 禁用按钮
       this.category.category3Id = "";
     },
-    //显示添加属性列表
+    // 显示添加属性列表
     add() {
       this.isShowList = false;
       this.attr.attrName = "";
@@ -159,45 +194,47 @@ export default {
       }
       row.edit = false;
     },
-    //保存数据
+    // 保存
     async save() {
+      // 判断是否是添加
       const isAdd = !this.attr.id;
+
       const data = this.attr;
 
       if (isAdd) {
+        // this.attr里面只有attrName和attrValueList
+        // 还需要categoryId和categoryLevel
         data.categoryId = this.category.category3Id;
         data.categoryLevel = 3;
       }
 
+      // 修改
       const result = await this.$API.attrs.saveAttrInfo(data);
+
       if (result.code === 200) {
         this.$message.success("更新属性成功~");
         this.isShowList = true;
-        this.getAttrList(this.category);
+        this.getAttrList();
       } else {
         this.$message.error(result.message);
       }
     },
-    //删除属性值
     delAttrValue(index) {
-      // console.log(index);
+      console.log(index);
       this.attr.attrValueList.splice(index, 1);
     },
-    //添加属性值
     addAttrValue() {
       this.attr.attrValueList.push({ edit: true });
       this.$nextTick(() => {
         this.$refs.input.focus();
       });
     },
-
     edit(row) {
       this.$set(row, "edit", true);
       this.$nextTick(() => {
         this.$refs.input.focus();
       });
     },
-
     update(attr) {
       // 为了防止attr变化时直接修改原数据
       // this.attr = {
@@ -209,10 +246,8 @@ export default {
 
       this.isShowList = false;
     },
-
-    async getAttrList(category) {
-      this.category = category;
-      const result = await this.$API.attrs.getAttrList(category);
+    async getAttrList() {
+      const result = await this.$API.attrs.getAttrList(this.category);
       if (result.code === 200) {
         // console.log(result.data);
         // 子组件给父组件传递参数 自定义事件
@@ -223,12 +258,14 @@ export default {
     },
   },
   mounted() {
-    this.$bus.$on("change", this.getAttrList);
-    this.$bus.$on("clearList", this.clearList);
+    // this.$bus.$on("change", this.getAttrList);
+    // this.$bus.$on("clearList", this.clearList);
   },
   beforeDestroy() {
-    this.$bus.$off("change", this.getAttrList);
-    this.$bus.$off("clearList", this.clearList);
+    // 通常情况下：清除绑定的全局事件
+    // this.$bus.$off("change", this.getAttrList);
+    // this.$bus.$off("clearList", this.clearList);
+    this.$store.commit("category/RESET_CATEGORY_ID");
   },
   components: {
     Category,

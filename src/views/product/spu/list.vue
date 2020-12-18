@@ -1,11 +1,12 @@
 <template>
   <div>
-    <SkuList v-if="isShowSkuList" :spuItem="spuItem" />
     <!--
       @change 当三级分类修改的时候触发。得到所有分类id
       @clearList 当1级分类和2级分类触发的时候触发，清空列表
       :disabled 决定select是否可以使用
      -->
+    <SkuList v-if="isShowSkuList" :spuItem="spuItem" />
+
     <div v-else>
       <Category :disabled="!isShowList" />
       <!--
@@ -48,9 +49,11 @@ export default {
     },
     showList(category) {
       this.isShowList = true;
-      this.$nextTick(() => {
-        this.$bus.$emit("change", category);
-      });
+      // 等ShowList组件加载完成，在触发事件
+      // this.$nextTick(() => {
+      //   this.$bus.$emit("change", category);
+      // });
+      // 通知ShowList重新发送请求
     },
   },
   components: {
